@@ -1,0 +1,25 @@
+extensions:
+  sumologic:
+    access_id: su9GXrj24O8Ix6
+    access_key: x5JQEnyFu2S1Ys9xufpvWwdtuBtkf0VJGTmgzk0twpEytV3UGe2dqorIMXU3aAEr
+    api_base_url: https://nite-open-events.sumologic.net/
+receivers:
+  telegraf:
+    separate_field: false
+    agent_config: |
+      [agent]
+        interval = "3s"
+        flush_interval = "3s"
+      [[inputs.system]]
+exporters:
+  sumologic:
+    auth:
+      authenticator: sumologic
+    metric_format: otlp
+service:
+  extensions: [sumologic]
+  pipelines:
+    metrics/1:
+      receivers: [telegraf]
+      processors: []
+      exporters: [sumologic]
