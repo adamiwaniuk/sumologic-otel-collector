@@ -7,9 +7,11 @@ docker:
 - any: ['**/Dockerfile*', '**/.dockerignore']
 
 # Add 'github_actions' label to any change .github/ directory
-github_actions:
+test_adami_xx:
 - any: ['.github/**']
 
 # Add 'go' label to any change *.go files
 go:
 - any: ['**/*.go']
+
+
