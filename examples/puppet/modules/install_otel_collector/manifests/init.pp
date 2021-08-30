@@ -19,6 +19,18 @@ class install_otel_collector {
       path    => ["/usr/bin", "/usr/sbin"],
    }
 
+   exec {"download prometheus binary":
+      cwd     => "/tmp/",
+      command => "wget https://github.com/prometheus/prometheus/releases/download/v2.29.2/prometheus-2.29.2.linux-amd64.tar.gz && tar -xzvf prometheus-2.29.2.linux-amd64.tar.gz",
+      path    => ["/usr/bin", "/usr/sbin"],
+   }
+
+   exec {"copy binary":
+      cwd     => "/tmp/",
+      command => "cp /tmp/prometheus-2.29.2.linux-amd64/prometheus /usr/local/bin/",
+      path    => ["/usr/bin", "/usr/sbin"],
+   }
+
    exec {"make otelcol-sumo executable":
       cwd     => "/usr/local/bin/",
       command => "chmod +x otelcol-sumo",
@@ -39,6 +51,11 @@ class install_otel_collector {
      mode => "644",
    }
 
+   file {"/etc/otelcol-sumo/prom.yaml":
+     source => "puppet:///modules/install_otel_collector/prom.yaml",
+     mode => "644",
+   }
+
    group {"opentelemetry":
       ensure  => "present",
    }
@@ -48,17 +65,24 @@ class install_otel_collector {
       groups  => ["opentelemetry"],
    }
 
-   service {"otelcol-sumo":
-      ensure => "running",
-      enable => true,
+   # service {"otelcol-sumo":
+   #    ensure => "running",
+   #    enable => true,
+   # }
+
+   exec { 'run prometheus in background':
+      command => 'prometheus --config.file /etc/otelcol-sumo/prom.yaml > /var/log/prom.log 2>&1 &',
+      path    => ['/usr/local/bin/', '/usr/bin', '/usr/sbin'],
+      logoutput => true,
+      provider => shell,
+      user => root,
    }
 
-   # exec { 'run otelcol-sumo in background':
-   #    cwd => '/etc/otelcol-sumo/',
-   #    command => '/bin/bash -c "/usr/local/bin/otelcol-sumo --log-level DEBUG --log-profile dev  --config /etc/otelcol-sumo/config.yaml > /var/log/otelcol.log 2>&1 &"',
-   #    path    => ['/usr/local/bin/', '/usr/bin', '/usr/sbin'],
-   #    logoutput => true,
-   #    provider => shell,
-   #    user => root,
-   # }
+   exec { 'run otelcol-sumo in background':
+      command => 'otelcol-sumo --config /etc/otelcol-sumo/config.yaml > /var/log/otelcol.log 2>&1 &',
+      path    => ['/usr/local/bin/', '/usr/bin', '/usr/sbin'],
+      logoutput => true,
+      provider => shell,
+      user => root,
+   }
 }
